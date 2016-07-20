@@ -517,6 +517,15 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin):
         else:
             return tiles_link.url
 
+    def get_mvt_tiles_url(self):
+        """Return URL of an MVT server or None if it does not exist."""
+        try:
+            tiles_link = self.link_set.get(link_type='mvt')
+        except Link.DoesNotExist:
+            return None
+        else:
+            return tiles_link.url
+
     def get_legend(self):
         """Return Link for legend or None if it does not exist.
         """

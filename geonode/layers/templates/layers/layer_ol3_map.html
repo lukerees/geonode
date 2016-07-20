@@ -12,22 +12,38 @@
     var bbox = null;
     {% endif %}
     
-    source = null;
+    layer = null;
     {% if resource.get_tiles_url %}
-    source = new ol.source.XYZ({
-    	url: '{{ resource.get_tiles_url|safe }}'
+    layer = new ol.layer.Tile({
+        source: new ol.source.XYZ({
+    	    url: '{{ resource.get_tiles_url|safe }}'
+    	})
+    });
+
+    {% elif resource.get_mvt_tiles_url %}
+    layer = new ol.layer.VectorTile({
+        source: new ol.source.VectorTile({
+            format: new ol.format.MVT(),
+            tileGrid: ol.tilegrid.createXYZ({maxZoom: 22}),
+            tilePixelRatio: 16,
+            url: '{{ resource.get_mvt_tiles_url|safe }}'
+        })
     });
 
     {% elif resource.ptype == 'gxp_wmscsource' %}
-    source = new ol.source.TileWMS({
-    	url: '{{ resource.ows_url|safe }}',
-    	params: {'LAYERS': '{{ resource.typename }}'}
+    layer = new ol.layer.Tile({
+        source: new ol.source.TileWMS({
+    	    url: '{{ resource.ows_url|safe }}',
+    	    params: {'LAYERS': '{{ resource.typename }}'}
+    	});
     });
 
     {% elif resource.ptype == 'gxp_arcrestsource' %}
-    source = new ol.source.TileArcGISRest({
-    	url: '{{ resource.ows_url|safe }}',
-        params: {'LAYERS': '{{ resource.typename }}'}
+    layer = new ol.layer.Tile({
+        source: new ol.source.TileArcGISRest({
+    	    url: '{{ resource.ows_url|safe }}',
+            params: {'LAYERS': '{{ resource.typename }}'}
+        })
     });
 
     {% endif %}
@@ -37,14 +53,12 @@
     if (crs != 'EPSG:4326') {
         crs = 'EPSG:3857';
     }
-    if (source != null) {
+    if (layer != null) {
     	var layers = [
         	new ol.layer.Tile({
-            	source: new ol.source.OSM()
-          	}),
-          	new ol.layer.Tile({
-            	source: source
-          	})
+        	    source: new ol.source.OSM()
+        	}),
+        	layer
     	];
     	
     	var map = new ol.Map({
@@ -53,6 +67,7 @@
           	view: new ol.View({
             	center: [0, 0],
             	zoom: 2,
+            	minZoom: 1,
             	projection: crs
             })	
     	});
